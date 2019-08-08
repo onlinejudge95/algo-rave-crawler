@@ -1,0 +1,1 @@
+black --line-length 79 --target-version py37 manage.py
