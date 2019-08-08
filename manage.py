@@ -1,6 +1,7 @@
 import contextlib
 import datetime
 import os
+import time
 
 from bs4 import BeautifulSoup
 from requests import api, exceptions
@@ -21,11 +22,7 @@ def is_correct(res):
     try:
         content_type = res.headers["Content-Type"].lower()
 
-        return (
-            res.status_code == 200
-            and content_type is not None
-            and "html" in content_type
-        )
+        return res.status_code == 200 and content_type is not None and "html" in content_type
     except Exception:
         return False
 
@@ -50,7 +47,7 @@ def prepare_output(data):
             for event in data:
                 fp.write(f"{event['time']}\t{event['location']}\n")
     else:
-        print("SORRY!! no rave near you.")
+        print("SORRY!! no rave near you recently.")
 
 
 def main():
@@ -60,21 +57,17 @@ def main():
     events = list()
 
     for abbr in soup.select("abbr"):
-        event_time = datetime.datetime.strptime(
-            abbr.get("title"), "%Y-%m-%dT%H:%M:%S"
-        )
+        event_time = datetime.datetime.strptime(abbr.get("title"), "%Y-%m-%dT%H:%M:%S")
         event_location_data = abbr.next_sibling.strip()
 
-        if (
-            "india" in event_location_data.lower()
-            and event_time > datetime.datetime.now()
-        ):
-            events.append(
-                {"time": event_time, "location": event_location_data}
-            )
+        if "india" in event_location_data.lower() and event_time > datetime.datetime.now():
+            events.append({"time": event_time, "location": event_location_data})
 
     prepare_output(events)
 
 
 if __name__ == "__main__":
+    start = time.perf_counter()
     main()
+    end = time.perf_counter()
+    print(f"Process took {end - start:0.2f} s")
